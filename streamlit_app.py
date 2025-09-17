@@ -15,6 +15,8 @@ CSV_URL = "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv"
 @st.cache_data(ttl=3600)
 def load_global_temp_data():
     try:
+        response = requests.get(CSV_URL, timeout=30)
+        response.raise_for_status()
         response = requests.get(CSV_URL, timeout=10)
         response.raise_for_status()
         df = pd.read_csv(StringIO(response.text), skiprows=1)
