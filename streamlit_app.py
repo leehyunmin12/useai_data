@@ -17,8 +17,6 @@ def load_global_temp_data():
     try:
         response = requests.get(CSV_URL, timeout=30)
         response.raise_for_status()
-        response = requests.get(CSV_URL, timeout=10)
-        response.raise_for_status()
         df = pd.read_csv(StringIO(response.text), skiprows=1)
         df = df.iloc[:-1, [0, -1]]
         df.columns = ['Year', 'Temperature']
@@ -26,7 +24,7 @@ def load_global_temp_data():
         df['Temperature'] = df['Temperature'].astype(float)
         return df
     except Exception as e:
-        st.error(f"⚠️ 데이터 로딩 실패: {e}")
+        st.warning(f"⚠️ 데이터 로딩 실패: {e}\n예시 데이터로 표시합니다.")
         # 예시 데이터 생성
         df_example = pd.DataFrame({
             'Year': pd.date_range(start='1980-01-01', periods=44, freq='Y'),
@@ -70,20 +68,20 @@ start_year, end_year = st.sidebar.slider(
 )
 
 df_global_filtered = df_global[
-    (df_global['Year'].dt.year >= start_year) &
+    (df_global['Year'].dt.year >= start_year) & 
     (df_global['Year'].dt.year <= end_year)
 ]
 df_user_filtered = df_user[
-    (df_user['연도'].dt.year >= start_year) &
+    (df_user['연도'].dt.year >= start_year) & 
     (df_user['연도'].dt.year <= end_year)
 ]
 df_glacier_filtered = df_glacier[
-    (df_glacier['연도'].dt.year >= start_year) &
+    (df_glacier['연도'].dt.year >= start_year) & 
     (df_glacier['연도'].dt.year <= end_year)
 ]
 
 # =======================
-# 1. 위 그래프: 전 세계 평균 기온 + 학생 불안감 지수
+# 1. 전 세계 평균 기온 + 학생 불안감 지수
 # =======================
 st.title("🌎 전 세계 평균 기온과 학생 불안감 지수 (1980~2023)")
 st.markdown("전 세계 평균 기온과 학생 불안감 지수를 한눈에 비교하는 꺾은선 그래프입니다.")
@@ -126,7 +124,7 @@ fig1.update_layout(
 st.plotly_chart(fig1, use_container_width=True)
 
 # =======================
-# 2. 아래 그래프: 빙하 녹은 질량 + 바이러스 발생 지수
+# 2. 빙하 녹은 질량 + 바이러스 발생 지수
 # =======================
 st.title("❄️ 빙하 녹은 질량과 바이러스 발생 지수")
 st.markdown("빙하 녹은 질량과 바이러스 발생 지수를 한눈에 비교하는 꺾은선 그래프입니다.")
@@ -167,3 +165,14 @@ fig2.update_layout(
     hovermode="x unified"
 )
 st.plotly_chart(fig2, use_container_width=True)
+
+# =======================
+# 데이터 출처
+# =======================
+st.markdown("### 📌 데이터 출처")
+st.markdown("""
+- **전 세계 평균 기온**: NASA GISS [GISTEMP](https://data.giss.nasa.gov/gistemp/)  
+- **학생 불안감 지수**: 시뮬레이션 데이터 (예시)  
+- **빙하 질량 감소**: IPCC 보고서, NASA Earth Observatory [NASA EO](https://earthobservatory.nasa.gov/)  
+- **바이러스 발생 관련**: Nature / Science 논문, Arctic/Antarctic 고대 바이러스 연구
+""")
