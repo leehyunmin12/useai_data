@@ -301,6 +301,7 @@ with tab2:
         with col3:
             st.metric("⚡ 행동 의지 갭", f"{action_gap:.1f}점", 
                      delta="개선 필요" if action_gap > 2 else "양호")
+            st.caption("💡 걱정하는 만큼 실천하고 있는지를 나타내요")
         
         # 맞춤형 추천
         st.markdown("### 💡 맞춤형 기후 행동 추천")
