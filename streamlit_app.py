@@ -8,6 +8,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import warnings
+import random
 warnings.filterwarnings('ignore')
 
 # 페이지 설정
@@ -55,6 +56,34 @@ st.markdown("""
     background-color: #f0f2f6;
     border-radius: 5px;
 }
+.game-card {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    margin: 10px 0;
+    color: #000000;
+}
+.quiz-option {
+    background-color: #e3f2fd;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.quiz-option:hover {
+    background-color: #bbdefb;
+}
+.score-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2e7d32;
+    text-align: center;
+    padding: 10px;
+    background-color: #e8f5e8;
+    border-radius: 10px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -62,11 +91,12 @@ st.markdown("""
 st.markdown('<div class="main-header">🌍 빙하 바이러스와 청소년 정신건강 분석 대시보드</div>', unsafe_allow_html=True)
 
 # ==================== 탭 생성 ====================
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 공식 공개 데이터 대시보드",
     "📈 사용자 데이터 분석",
     "🧊 빙하 요인 & 청소년 행동",
-    "🧠 팬데믹 기간 청소년 정신건강"
+    "🧠 팬데믹 기간 청소년 정신건강",
+    "🎮 기후 행동 퀴즈 게임"
 ])
 
 # ==================== 탭1: 공식 공개 데이터 ====================
@@ -218,7 +248,399 @@ with tab1:
 
 # ==================== 탭2: 사용자 데이터 분석 ====================
 with tab2:
-    st.markdown('<div class="sub-header">📈 사용자 데이터 분석 페이지 (추가 구현 예정)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header">📈 사용자 맞춤형 기후 영향 분석</div>', unsafe_allow_html=True)
+    
+    # 사용자 입력 섹션
+    st.markdown("### 🔍 나의 기후 영향도 분석하기")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### 🏠 개인 정보")
+        age = st.slider("나이", 13, 19, 16)
+        region = st.selectbox("거주 지역", ["서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"])
+        family_size = st.slider("가족 구성원 수", 2, 8, 4)
+        
+    with col2:
+        st.markdown("#### 🚗 생활 패턴")
+        transport = st.multiselect("주로 이용하는 교통수단", ["도보", "자전거", "대중교통", "자가용", "오토바이"])
+        electricity_usage = st.slider("월평균 전기 사용량 (kWh)", 200, 800, 350)
+        waste_separation = st.slider("분리수거 실천도 (1-5점)", 1, 5, 3)
+    
+    # 기후 인식도 설문
+    st.markdown("#### 🌍 기후 변화 인식도")
+    climate_concern = st.slider("기후 변화에 대한 걱정 정도 (1-10점)", 1, 10, 7)
+    action_willingness = st.slider("환경 보호 행동 의지 (1-10점)", 1, 10, 6)
+    future_anxiety = st.slider("미래에 대한 불안감 (1-10점)", 1, 10, 5)
+    
+    if st.button("📊 내 기후 영향도 분석하기", type="primary"):
+        # 탄소 발자국 계산
+        carbon_transport = len(transport) * 50 if "자가용" in transport else len(transport) * 20
+        carbon_electricity = electricity_usage * 0.5
+        carbon_waste = (5 - waste_separation) * 30
+        total_carbon = carbon_transport + carbon_electricity + carbon_waste
+        
+        # 기후 스트레스 지수 계산
+        climate_stress = (climate_concern + future_anxiety) / 2
+        action_gap = climate_concern - action_willingness
+        
+        # 결과 표시
+        st.markdown("---")
+        st.markdown('<div class="sub-header">📊 분석 결과</div>', unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("🌡️ 월간 탄소 발자국", f"{total_carbon:.1f} kg CO2", 
+                     delta=f"{total_carbon-300:.1f}" if total_carbon > 300 else f"{total_carbon-300:.1f}")
+        
+        with col2:
+            st.metric("😰 기후 스트레스 지수", f"{climate_stress:.1f}/10", 
+                     delta="높음" if climate_stress > 7 else "보통" if climate_stress > 4 else "낮음")
+        
+        with col3:
+            st.metric("⚡ 행동 의지 갭", f"{action_gap:.1f}점", 
+                     delta="개선 필요" if action_gap > 2 else "양호")
+        
+        # 맞춤형 추천
+        st.markdown("### 💡 맞춤형 기후 행동 추천")
+        
+        # 우선순위별 추천 시스템
+        high_priority = []
+        medium_priority = []
+        low_priority = []
+        
+        # 탄소 발자국 기반 추천
+        if "자가용" in transport:
+            high_priority.append({
+                "action": "🚌 대중교통 또는 자전거 이용하기",
+                "impact": "월 100-150kg CO2 절약",
+                "difficulty": "쉬움",
+                "detail": "가까운 거리는 걷거나 자전거를, 먼 거리는 지하철/버스 이용"
+            })
+        
+        if electricity_usage > 400:
+            high_priority.append({
+                "action": "💡 스마트한 전기 절약",
+                "impact": "월 50-80kg CO2 절약", 
+                "difficulty": "쉬움",
+                "detail": "사용하지 않는 전자제품 플러그 뽑기, LED 전구 사용, 에어컨 적정온도 유지"
+            })
+            
+        if waste_separation < 3:
+            high_priority.append({
+                "action": "♻️ 제대로 된 분리수거와 재활용",
+                "impact": "월 30-50kg CO2 절약",
+                "difficulty": "쉬움", 
+                "detail": "플라스틱 세척 후 분리배출, 종이/캔/병 올바른 분류"
+            })
+        
+        # 정신건강 관련 추천
+        if climate_stress > 7:
+            high_priority.append({
+                "action": "🧘‍♀️ 기후 불안감 완화 활동",
+                "impact": "정신건강 개선",
+                "difficulty": "보통",
+                "detail": "자연에서 시간 보내기, 명상, 요가, 친구들과 감정 나누기"
+            })
+        
+        if action_gap > 3:
+            medium_priority.append({
+                "action": "👥 동료와 함께하는 기후 행동",
+                "impact": "실천률 3배 향상",
+                "difficulty": "보통",
+                "detail": "학교 환경동아리 참여, 친구들과 챌린지, 가족 기후 회의"
+            })
+        
+        # 연령별 맞춤 추천
+        if age <= 15:
+            medium_priority.append({
+                "action": "📚 또래와 함께하는 기후 교육",
+                "impact": "지식 향상 + 네트워크 구축",
+                "difficulty": "쉬움",
+                "detail": "학교 과학시간 연계, 환경 다큐 시청, 기후 관련 도서 읽기"
+            })
+        else:
+            medium_priority.append({
+                "action": "🎯 리더십 발휘하기",
+                "impact": "주변인 5-10명 영향",
+                "difficulty": "어려움",
+                "detail": "환경 동아리 만들기, 캠페인 기획, 지역사회 참여"
+            })
+        
+        # 지역별 맞춤 추천
+        if region in ["서울", "인천", "경기"]:
+            low_priority.append({
+                "action": "🌆 도시형 기후 행동",
+                "impact": "지역 환경 개선",
+                "difficulty": "보통", 
+                "detail": "미세먼지 줄이기, 도시 열섬 완화, 그린 루프 캠페인 참여"
+            })
+        else:
+            low_priority.append({
+                "action": "🌄 지역 특성 맞춤 활동",
+                "impact": "생태계 보호",
+                "difficulty": "보통",
+                "detail": "지역 생태계 보호, 농촌형 재생에너지, 지역 특산물 활용"
+            })
+        
+        # 추가 보편적 추천사항
+        medium_priority.extend([
+            {
+                "action": "🌱 식습관 개선",
+                "impact": "월 20-40kg CO2 절약",
+                "difficulty": "보통",
+                "detail": "로컬 푸드 섭취, 음식물 쓰레기 줄이기, 채식 요리 늘리기"
+            },
+            {
+                "action": "🛍️ 의식적인 소비",
+                "impact": "월 15-30kg CO2 절약",
+                "difficulty": "어려움",
+                "detail": "중고품 활용, 내구재 선택, 불필요한 구매 줄이기"
+            }
+        ])
+        
+        low_priority.extend([
+            {
+                "action": "📱 디지털 탄소발자국 줄이기",
+                "impact": "월 5-15kg CO2 절약", 
+                "difficulty": "쉬움",
+                "detail": "스트리밍 시간 줄이기, 클라우드 저장소 정리, 불필요한 앱 삭제"
+            },
+            {
+                "action": "🏡 가정 내 에너지 효율화",
+                "impact": "월 30-60kg CO2 절약",
+                "difficulty": "어려움",
+                "detail": "단열 개선, 고효율 가전 교체, 태양광 패널 설치 (가족과 상의)"
+            }
+        ])
+        
+        # 우선순위별 표시
+        if high_priority:
+            st.markdown("#### 🔥 **즉시 실천 추천** (높은 효과)")
+            for i, rec in enumerate(high_priority):
+                with st.container():
+                    col1, col2, col3 = st.columns([3, 1, 1])
+                    with col1:
+                        st.success(f"**{rec['action']}**")
+                        st.write(f"💡 {rec['detail']}")
+                    with col2:
+                        st.metric("영향도", rec['impact'])
+                    with col3:
+                        difficulty_color = {"쉬움": "🟢", "보통": "🟡", "어려움": "🔴"}
+                        st.write(f"{difficulty_color[rec['difficulty']]} {rec['difficulty']}")
+                    st.markdown("---")
+        
+        if medium_priority:
+            st.markdown("#### 🎯 **단계적 실천 추천** (중간 효과)")
+            for rec in medium_priority:
+                with st.container():
+                    col1, col2, col3 = st.columns([3, 1, 1])
+                    with col1:
+                        st.info(f"**{rec['action']}**")
+                        st.write(f"💡 {rec['detail']}")
+                    with col2:
+                        st.metric("영향도", rec['impact'])
+                    with col3:
+                        difficulty_color = {"쉬움": "🟢", "보통": "🟡", "어려움": "🔴"}
+                        st.write(f"{difficulty_color[rec['difficulty']]} {rec['difficulty']}")
+                    st.markdown("---")
+        
+        if low_priority:
+            st.markdown("#### 🌟 **장기 목표 추천** (지속적 효과)")
+            for rec in low_priority:
+                with st.container():
+                    col1, col2, col3 = st.columns([3, 1, 1]) 
+                    with col1:
+                        st.write(f"**{rec['action']}**")
+                        st.write(f"💡 {rec['detail']}")
+                    with col2:
+                        st.metric("영향도", rec['impact'])
+                    with col3:
+                        difficulty_color = {"쉬움": "🟢", "보통": "🟡", "어려움": "🔴"}
+                        st.write(f"{difficulty_color[rec['difficulty']]} {rec['difficulty']}")
+                    st.markdown("---")
+        
+        # 종합 추천 점수
+        total_recommendations = len(high_priority) + len(medium_priority) + len(low_priority)
+        st.markdown(f"""
+        ### 📋 **당신만의 기후 행동 로드맵**
+        
+        ✅ **총 {total_recommendations}개 맞춤형 추천사항**  
+        🔥 **즉시 실천**: {len(high_priority)}개 (당장 시작 가능)  
+        🎯 **단계적 실천**: {len(medium_priority)}개 (1-2주 내 도전)  
+        🌟 **장기 목표**: {len(low_priority)}개 (한 달 이상 계획)  
+        
+        **💪 실천 팁**: 한 번에 모든 것을 하려 하지 말고, 즉시 실천 항목부터 하나씩 차근차근 도전해보세요!
+        """)
+        
+        # 실천 동기부여
+        potential_savings = 0
+        if "자가용" in transport: potential_savings += 125
+        if electricity_usage > 400: potential_savings += 65
+        if waste_separation < 3: potential_savings += 40
+        potential_savings += 30  # 기본 개선 가능량
+        
+        st.success(f"""
+        🌍 **예상 효과**: 이 추천사항들을 실천하면 **월 약 {potential_savings}kg CO2**를 절약할 수 있어요!  
+        이는 **나무 {potential_savings//22}그루**가 1년간 흡수하는 CO2와 같은 양입니다. 🌳
+        """)
+        
+        # 지역별 비교 차트
+        st.markdown("### 📍 지역별 기후 영향 비교")
+        
+        # 가상 지역 데이터
+        regional_data = {
+            "지역": ["서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종"],
+            "평균_탄소발자국": [320, 280, 290, 310, 270, 285, 340, 260],
+            "기후_스트레스": [7.2, 6.8, 6.5, 7.0, 6.3, 6.7, 7.5, 6.0]
+        }
+        df_regional = pd.DataFrame(regional_data)
+        
+        fig_regional = go.Figure()
+        fig_regional.add_trace(go.Bar(
+            name="평균 탄소 발자국",
+            x=df_regional["지역"],
+            y=df_regional["평균_탄소발자국"],
+            yaxis="y",
+            offsetgroup=1,
+            marker_color='#FF6B6B'
+        ))
+        fig_regional.add_trace(go.Bar(
+            name="기후 스트레스 지수",
+            x=df_regional["지역"],
+            y=df_regional["기후_스트레스"],
+            yaxis="y2",
+            offsetgroup=2,
+            marker_color='#4ECDC4'
+        ))
+        
+        # 사용자 데이터 표시
+        if region in df_regional["지역"].values:
+            fig_regional.add_trace(go.Scatter(
+                name="내 데이터",
+                x=[region],
+                y=[total_carbon],
+                mode='markers',
+                marker=dict(size=15, color='red', symbol='star'),
+                yaxis="y"
+            ))
+        
+        fig_regional.update_layout(
+            title="지역별 탄소 발자국 및 기후 스트레스 비교",
+            xaxis_title="지역",
+            yaxis=dict(title="탄소 발자국 (kg CO2)", side="left"),
+            yaxis2=dict(title="기후 스트레스 지수", side="right", overlaying="y"),
+            height=400
+        )
+        st.plotly_chart(fig_regional, use_container_width=True)
+        
+        # 개인화된 행동 계획
+        st.markdown("### 📅 30일 기후 행동 계획")
+        st.markdown("**체계적인 실천을 위한 주차별 목표를 설정해보세요!**")
+        st.markdown("---")
+        
+        action_plan = {
+            "1주차 🌱 기초 다지기": ["대중교통 3회 이상 이용하기", "전기 절약 실천하기 (플러그 뽑기)", "분리수거 완벽하게 실천하기"],
+            "2주차 🤝 소통하기": ["친구와 환경 이야기 나누기", "일회용품 사용 줄이기", "에너지 절약형 가전제품 사용하기"],
+            "3주차 🌍 확장하기": ["환경 동아리 활동에 참여하기", "지역 환경 캠페인 찾아보기", "가족과 기후 변화 토론하기"],
+            "4주차 🎯 도전하기": ["친구들과 기후 행동 챌린지하기", "환경 다큐멘터리 시청하기", "다음 달 실천 계획 세우기"]
+        }
+        
+        import time
+        current_time = int(time.time())
+        
+        col1, col2 = st.columns(2)
+        
+        for idx, (week, actions) in enumerate(action_plan.items()):
+            target_col = col1 if idx % 2 == 0 else col2
+            
+            with target_col:
+                st.markdown(f"#### {week}")
+                st.markdown("**이번 주 실천 목표:**")
+                
+                for action_idx, action in enumerate(actions):
+                    unique_key = f"plan_{current_time}_{idx}_{action_idx}_{len(action)}"
+                    checkbox_result = st.checkbox(
+                        action, 
+                        key=unique_key,
+                        help=f"{week}의 {action_idx+1}번째 목표입니다."
+                    )
+                    
+                st.markdown("")  # 공백 추가
+                if idx < len(action_plan) - 1:  # 마지막 항목이 아닐 때만 구분선 추가
+                    st.markdown("---")
+    
+    # 추가 리소스
+    st.markdown("---")
+    st.markdown("### 📚 더 알아보기")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        **🔬 기후 과학 이해하기**
+        - [NASA 기후 변화 시뮬레이션](https://climate.nasa.gov)
+        - [IPCC 청소년 가이드](https://www.ipcc.ch)
+        - [기후변화센터 교육자료](https://climatechange.kr)
+        """)
+    
+    with col2:
+        st.markdown("""
+        **🌱 실천 가이드**
+        - [청소년 환경 행동 매뉴얼](https://example.com)
+        - [가정에서 실천하는 탄소중립](https://example.com)
+        - [학교 기후 동아리 만들기](https://example.com)
+        """)
+    
+    with col3:
+        st.markdown("""
+        **🤝 커뮤니티 참여**
+        - [청소년 기후행동 단체](https://youthclimatestrike.org)
+        - [지역 환경 봉사활동](https://1365.go.kr)
+        - [온라인 기후 토론방](https://example.com)
+        """)
+    
+    # 데이터 저장 및 추적 기능 (가상)
+    st.markdown("---")
+    st.markdown("### 📈 나의 기후 행동 추적")
+    
+    # 가상의 사용자 진행도 데이터
+    progress_data = {
+        "월": ["1월", "2월", "3월", "4월", "5월", "6월"],
+        "탄소절약량": [20, 35, 45, 60, 70, 85],
+        "실천점수": [6.2, 6.8, 7.1, 7.5, 8.0, 8.3]
+    }
+    df_progress = pd.DataFrame(progress_data)
+    
+    fig_progress = go.Figure()
+    fig_progress.add_trace(go.Scatter(
+        x=df_progress["월"],
+        y=df_progress["탄소절약량"],
+        mode='lines+markers',
+        name='월별 탄소 절약량 (kg)',
+        line=dict(color='#2ECC71', width=3),
+        marker=dict(size=8)
+    ))
+    
+    fig_progress2 = go.Figure()
+    fig_progress2.add_trace(go.Scatter(
+        x=df_progress["월"],
+        y=df_progress["실천점수"],
+        mode='lines+markers',
+        name='환경 실천 점수',
+        line=dict(color='#3498DB', width=3),
+        marker=dict(size=8)
+    ))
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        fig_progress.update_layout(title="월별 탄소 절약량 추이", height=300)
+        st.plotly_chart(fig_progress, use_container_width=True)
+    
+    with col2:
+        fig_progress2.update_layout(title="환경 실천 점수 향상", height=300)
+        st.plotly_chart(fig_progress2, use_container_width=True)
 
 # ==================== 탭3: 빙하 요인 & 청소년 행동 ====================
 with tab3:
@@ -294,6 +716,143 @@ with tab3:
     </ul>
     </div>
     """, unsafe_allow_html=True)
+
+# ==================== 탭5: 기후 행동 퀴즈 게임 ====================
+with tab5:
+    st.markdown('<div class="sub-header">🎮 기후 행동 퀴즈 게임</div>', unsafe_allow_html=True)
+    st.markdown("**아래 퀴즈를 풀며 기후 행동에 대해 더 자세히 알아보세요!**")
+
+    # 게임 상태 초기화
+    if 'quiz_score' not in st.session_state:
+        st.session_state.quiz_score = 0
+    if 'quiz_answered' not in st.session_state:
+        st.session_state.quiz_answered = []
+    if 'current_quiz' not in st.session_state:
+        st.session_state.current_quiz = 0
+
+    # 퀴즈 데이터
+    quiz_data = [
+        {
+            "question": "🌍 일상생활에서 탄소 발자국을 가장 효과적으로 줄일 수 있는 방법은?",
+            "options": ["에어컨을 항상 가장 낮은 온도로 설정하기", "대중교통이나 자전거 이용하기", "전자제품을 계속 켜두기", "일회용품 많이 사용하기"],
+            "correct": 1,
+            "explanation": "대중교통이나 자전거를 이용하면 개인 차량 사용을 줄여 CO2 배출량을 크게 감소시킬 수 있습니다. 🚌🚲"
+        },
+        {
+            "question": "🔥 빙하가 빠르게 녹는 주요 원인 중 하나인 '검은탄소'란 무엇인가요?",
+            "options": ["석탄 덩어리", "매연과 그을음 입자", "검은색 얼음", "오염된 물"],
+            "correct": 1,
+            "explanation": "검은탄소(매연)는 빙하 표면에 쌓여서 햇빛을 더 많이 흡수하게 만들어 빙하를 더 빠르게 녹게 합니다. ⚫"
+        },
+        {
+            "question": "🌱 청소년이 기후 변화에 대응하기 위해 할 수 있는 가장 중요한 행동은?",
+            "options": ["아무것도 하지 않기", "친구들과 기후 문제에 대해 이야기하고 함께 행동하기", "혼자서만 실천하기", "어른들이 해결하기를 기다리기"],
+            "correct": 1,
+            "explanation": "친구들과 함께 기후 문제를 공유하고 집단 행동을 통해 더 큰 변화를 만들 수 있습니다! 👫🌍"
+        },
+        {
+            "question": "♻️ 재활용을 올바르게 실천하는 방법은?",
+            "options": ["모든 쓰레기를 재활용통에 넣기", "플라스틱을 깨끗이 씻어서 분리배출하기", "재활용 마크만 확인하고 버리기", "종류 상관없이 함께 버리기"],
+            "correct": 1,
+            "explanation": "플라스틱은 깨끗이 씻어서 올바르게 분리배출해야 실제로 재활용될 수 있습니다. 🧼♻️"
+        },
+        {
+            "question": "🌳 삼림 벌채가 기후 변화에 미치는 영향은?",
+            "options": ["기온을 낮춘다", "CO2 흡수량이 줄어들어 온난화가 가속화된다", "빙하가 더 빨리 얼어붙는다", "아무 영향이 없다"],
+            "correct": 1,
+            "explanation": "나무는 CO2를 흡수하는 중요한 역할을 하는데, 삼림이 줄어들면 대기 중 CO2가 증가해 온난화가 가속화됩니다. 🌲💨"
+        }
+    ]
+
+    # 점수 표시
+    col_score1, col_score2, col_score3 = st.columns([1,2,1])
+    with col_score2:
+        st.markdown(f'<div class="score-display">🏆 현재 점수: {st.session_state.quiz_score}/5</div>', unsafe_allow_html=True)
+
+    # 게임 리셋 버튼
+    if st.button("🔄 게임 다시 시작", key="reset_quiz"):
+        st.session_state.quiz_score = 0
+        st.session_state.quiz_answered = []
+        st.session_state.current_quiz = 0
+        st.rerun()
+
+    # 퀴즈 표시
+    if st.session_state.current_quiz < len(quiz_data):
+        current_q = quiz_data[st.session_state.current_quiz]
+        
+        st.markdown(f"""
+        <div class="game-card">
+        <h3>질문 {st.session_state.current_quiz + 1}/5</h3>
+        <h4>{current_q['question']}</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 선택지 버튼들
+        cols = st.columns(2)
+        for i, option in enumerate(current_q['options']):
+            col_idx = i % 2
+            with cols[col_idx]:
+                if st.button(f"{chr(65+i)}. {option}", key=f"option_{st.session_state.current_quiz}_{i}", 
+                           use_container_width=True):
+                    # 정답 체크
+                    if i == current_q['correct']:
+                        st.session_state.quiz_score += 1
+                        st.success(f"✅ 정답입니다! {current_q['explanation']}")
+                    else:
+                        correct_answer = current_q['options'][current_q['correct']]
+                        st.error(f"❌ 틀렸습니다. 정답: {chr(65+current_q['correct'])}. {correct_answer}")
+                        st.info(current_q['explanation'])
+                    
+                    st.session_state.quiz_answered.append(st.session_state.current_quiz)
+                    st.session_state.current_quiz += 1
+                    
+                    # 다음 문제로 이동
+                    if st.session_state.current_quiz < len(quiz_data):
+                        if st.button("➡️ 다음 문제", key="next_question"):
+                            st.rerun()
+                        # 자동으로 다음 문제로 이동
+                        st.rerun()
+    
+    else:
+        # 게임 완료
+        final_score = st.session_state.quiz_score
+        st.balloons()
+        
+        if final_score == 5:
+            st.success("🎉 완벽합니다! 기후 행동 전문가가 되셨네요!")
+            st.markdown("🏅 **기후 수호자** 칭호를 획득하셨습니다!")
+        elif final_score >= 3:
+            st.success("👏 잘하셨어요! 기후 변화에 대한 이해도가 높으시네요!")
+            st.markdown("🌱 **기후 지킴이** 칭호를 획득하셨습니다!")
+        else:
+            st.info("💪 조금 더 노력하면 됩니다! 다시 도전해보세요!")
+            st.markdown("🌿 **기후 새싹** 칭호를 획득하셨습니다!")
+        
+        # 행동 권장사항 표시
+        st.markdown("""
+        ### 🌍 이제 실제로 행동해볼까요?
+        
+        **오늘부터 실천할 수 있는 작은 행동들:**
+        - 🚶‍♀️ 가까운 거리는 걸어가기 또는 자전거 타기
+        - 💡 사용하지 않는 전자제품 플러그 뽑기
+        - 🥤 텀블러나 에코백 사용하기
+        - 👥 친구들과 기후 변화에 대해 이야기하기
+        - 🌱 학교나 지역의 환경 동아리 참여하기
+        
+        **당신의 작은 행동이 지구를 구합니다! 💚**
+        """)
+
+    # 추가 정보 섹션
+    st.markdown("""
+    ---
+    ### 📚 더 알아보고 싶다면?
+    
+    🔗 **유용한 링크들:**
+    - [청소년 기후행동](https://www.youthclimatestrike.org/) - 전 세계 청소년 기후 운동
+    - [기후변화센터](https://www.climatechange.kr/) - 기후 변화 정보와 교육 자료
+    - [그린피스](https://www.greenpeace.org/korea/) - 환경 보호 캠페인 참여
+    - [환경부 청소년 환경교육](https://www.me.go.kr/) - 정부 환경 교육 프로그램
+    """)
 
 # ==================== 탭4: 팬데믹 기간 청소년 정신건강 ====================
 with tab4:
